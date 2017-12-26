@@ -2,6 +2,7 @@
 import argparse
 import logging
 import socket
+import os
 import sys
 import alcatel
 import json
@@ -20,51 +21,50 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose',
                         action='count',
                         default=0,
-                        help='print debugging infromation to stderr')
+                        help='Print debugging infromation to stderr.')
 
     parser.add_argument('-d', '--debug',
                         action='store_true',
-                        help='raise python exceptions for debugging')
+                        help='Raise python exceptions for debugging.')
 
     parser.add_argument('-j', '--json',
                         action='store_true',
-                        help='return json output')
+                        help='Return json output.')
 
     parser.add_argument('-u', '--username',
                         metavar='username',
-                        help='specify username',
+                        help='Specify username. Could be set in USER env var.',
                         default=None)
 
     parser.add_argument('-p', '--password',
                         metavar='password',
-                        help='specify password',
+                        help='Specify password. Could be set in PASS env var.',
                         default=None)
 
     parser.add_argument('-P', '--port',
                         metavar='port',
-                        help='specify ssh port',
+                        help='Specify ssh port.',
                         type=int,
                         default=22)
 
     parser.add_argument('-e', '--expect',
                         metavar='expect',
-                        help='string to expect',
+                        help='String to expect.',
                         default=None)
 
     parser.add_argument('host',
                         metavar='host',
-                        help='host name or ip address to connect to')
+                        help='Host name or ip address to connect to.')
 
     parser.add_argument('command',
                         metavar='command',
                         nargs='+',
-                        help='command to execute')
+                        help='Command to execute.')
 
     args = parser.parse_args()
 
-    if args.verbose == 0:
-        logging_level = logging.WARNING
-        logging_format = '%(message)s'
+    logging_level = logging.WARNING
+    logging_format = '%(message)s'
     if args.verbose >= 1:
         logging_level = logging.INFO
         logging_format = '%(levelname)s - %(message)s'
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     try:
         username = args.username
         if username is None:
-            username = getpass.getuser()
+            username = os.environ.get('ALCATEL_USER', None)
             if username is None or username == '':
                 username = input('Enter username: ')
                 if username == '':
@@ -93,10 +93,12 @@ if __name__ == '__main__':
 
         password = args.password
         if password is None:
-            password = getpass.getpass('Enter password: ')
-            if password == '':
-                logger.error('Password cannot be empty')
-                sys.exit(1)
+            password = os.environ.get('ALCATEL_PASS', None)
+            if password is None or password == '':
+                password = getpass.getpass('Enter password: ')
+                if password == '':
+                    logger.error('Password cannot be empty')
+                    sys.exit(1)
 
         host = socket.gethostbyname(args.host)
 
