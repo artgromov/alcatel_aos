@@ -96,7 +96,7 @@ class AlcatelLegacySSH:
             logger.debug('reconnecting, channel closed')
             self._connect()
 
-    def _send(self, command):
+    def _send(self, command):  # TODO: test with big send_buffer
         self._ensure_connected()
 
         if isinstance(command, list) or isinstance(command, tuple):
@@ -128,28 +128,36 @@ class AlcatelLegacySSH:
         recv_string = recv_buffer.decode(self.encoding)
         return recv_string
 
-    def _recv_clean(self, recv_string, command):
-        recv_string = recv_string.replace('\r\n', '\n')
-        recv_string = recv_string.lstrip(command)
-        recv_string = recv_string.rstrip(self.prompt)
-        recv_string = recv_string.strip()
-        return recv_string
+    def _recv_parse(self, output, command):
+        output = output.replace('\r\n', '\n')  # TODO: test line endings processing on multiple platforms
+        output = output.lstrip(command)
+        output = output.rstrip(self.prompt)
+        output = output.strip()
+
+
+        result = {
+            'command': command,
+            'output': output,
+            'output_lines': output.split('\n'),
+            'data': None,
+        }
+
+        return result
 
     def send_command(self, command, *, expect=None, timeout=10):
         with self.thread_lock:
             self._send(command)
-            raw_output = self._recv(expect, timeout)
-            output = self._recv_clean(raw_output, command)
-            return output
+            recv_string = self._recv(expect, timeout)
+            result = self._recv_parse(recv_string, command)
+            return result
 
     def send_command_set(self, command_list):
         with self.thread_lock:
-            output_list = []
+            result_list = []
             for command in command_list:
-                output = self.send_command(command)
-                output_list.append(output)
-
-            return output_list
+                result = self.send_command(command)
+                result_list.append(result)
+            return result_list
 
     def close(self):
         self.transport.close()

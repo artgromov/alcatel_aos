@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-import argparse
 import logging
+import argparse
 import os
 import sys
 import traceback
 import socket
-import alcatel
 import json
 import getpass
+import alcatel
 from paramiko.ssh_exception import *
 
 
@@ -79,6 +79,7 @@ if __name__ == '__main__':
     logging.basicConfig(format=logging_format, level=logging_level)
 
     logger.debug('parsed args: %s' % args)
+    logger.debug('alcatel project directory: %s' % alcatel.PROJECTDIR)
 
     try:
         try:
@@ -106,18 +107,12 @@ if __name__ == '__main__':
 
             switch = alcatel.connect(host, username, password, port=args.port)
 
-            output = switch.send_command(command)
+            result = switch.send_command(command)
 
             if args.json:
-                json_output = {
-                    'command': command,
-                    'output': output,
-                    'output_lines': output.split('\n'),
-                }
-                print(json.dumps(json_output, sort_keys=True, indent=4))
-
+                print(json.dumps(result, sort_keys=True, indent=4))
             else:
-                print(output)
+                print(result['output'])
 
         except Exception as e:
             if args.traceback:
