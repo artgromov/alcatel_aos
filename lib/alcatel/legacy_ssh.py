@@ -48,7 +48,7 @@ class AlcatelLegacySSH:
 
         self.encoding = os.getenv('LANG')
         if self.encoding is None:
-            self.encoding = 'utf-8'
+            self.encoding = 'utf-8'  # TODO: find out better way to define encoding
         else:
             self.encoding = self.encoding.lower().split('.')[1]
         logger.debug('encoding: %s' % self.encoding)

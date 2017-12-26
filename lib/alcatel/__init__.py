@@ -5,6 +5,6 @@ __version_string__ = 'v' + '.'.join(str(i) for i in __version__)
 from alcatel.legacy_ssh import AlcatelLegacySSH
 
 
-def connect(host, username, password):
-    switch = AlcatelLegacySSH(host, username, password)
+def connect(host, username, password, port):
+    switch = AlcatelLegacySSH(host, username, password, port)
     return switch

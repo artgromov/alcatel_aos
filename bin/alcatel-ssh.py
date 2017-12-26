@@ -8,7 +8,7 @@ import socket
 import alcatel
 import json
 import getpass
-from paramiko.ssh_exception import SSHException, AuthenticationException
+from paramiko.ssh_exception import *
 
 
 logger = logging.getLogger('alcatel-ssh')
@@ -22,7 +22,8 @@ class InputException(Exception):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Remote command execution over ssh on legacy Alcatel OmniSwitch.',
                                      epilog='alcatel-ssh %s' % alcatel.__version_string__)
-
+    # TODO: add -f option to read command lines from file
+    # TODO: add -i option to read from stdin (may require to make <command> arg optional?)
     parser.add_argument('-u', '--username',
                         metavar='username',
                         help='Specify username. Could be set in USER env var.',
@@ -75,9 +76,7 @@ if __name__ == '__main__':
         logging_level = 5
         logging_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
-    logging.basicConfig(format=logging_format)
-    for logger_name in ['alcatel-ssh', 'alcatel.alcatel_legacy_os']:
-        logging.getLogger(logger_name).setLevel(logging_level)
+    logging.basicConfig(format=logging_format, level=logging_level)
 
     logger.debug('parsed args: %s' % args)
 
@@ -105,7 +104,7 @@ if __name__ == '__main__':
 
             command = ' '.join(args.command)
 
-            switch = alcatel.connect(host, username, password)
+            switch = alcatel.connect(host, username, password, port=args.port)
 
             output = switch.send_command(command)
 
@@ -127,27 +126,27 @@ if __name__ == '__main__':
 
     except KeyboardInterrupt:
         logger.error('Exiting by keyboard interrupt.')
-        sys.exit(0)  # User exit
+        sys.exit(0)
 
     except InputException as e:
         logger.error(e.args[0])
         sys.exit(1)  # User input errors
 
-    except OSError as e:
-        logger.error('OS error: %s.' % e.args[0])
-        sys.exit(2)  # OS errors
+    except socket.error as e:
+        logger.error('Socket error: %s.' % e.args[1])
+        sys.exit(2)
 
-    except AuthenticationException:
-        logger.error('Authentication failed.')
-        sys.exit(3)  # Authentication errors
+    except AuthenticationException as e:
+        logger.error('Authentication error: %s.' % e.args[0])
+        sys.exit(3)
 
     except SSHException as e:
         if e.args[0] == 'Error reading SSH protocol banner':
             logger.error('SSH legacy OmniSwitch error. Please wait for 2-5 minutes.')
             sys.exit(5)  # Special case
-        else:
-            logger.error('SSH error: %s' % e.args[0])
-            sys.exit(4)  # SSH errors
+
+        logger.error('SSH error: %s.' % e.args[0])
+        sys.exit(4)
 
     except Exception as e:
         logger.error('Unexpected error: %s.' % e.args[0])
