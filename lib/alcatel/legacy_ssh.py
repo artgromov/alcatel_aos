@@ -132,13 +132,21 @@ class AlcatelLegacySSH:
         output = output.replace('\r\n', '\n')  # TODO: test line endings processing on multiple platforms
         output = output.lstrip(command)
         output = output.rstrip(self.prompt)
-        output = output.strip()
+        output = output.strip().split('\n')
 
+        failed = False
+        failed_cause = None
+        for line in output:
+            if line.startswith('ERROR: '):
+                failed = True
+                failed_cause = line.lstrip('ERROR: ')
+                break
 
         result = {
             'command': command,
             'output': output,
-            'output_lines': output.split('\n'),
+            'failed': failed,
+            'failed_cause': failed_cause,
             'data': None,
         }
 

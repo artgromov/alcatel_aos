@@ -112,7 +112,7 @@ if __name__ == '__main__':
             if args.json:
                 print(json.dumps(result, sort_keys=True, indent=4))
             else:
-                print(result['output'])
+                print('\n'.join(result['output']))
 
         except Exception as e:
             if args.traceback:
