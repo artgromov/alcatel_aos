@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import argparse
 import logging
-import socket
 import os
 import sys
+import traceback
+import socket
 import alcatel
 import json
 import getpass
@@ -11,25 +12,16 @@ from paramiko.ssh_exception import SSHException, AuthenticationException
 
 
 logger = logging.getLogger('alcatel-ssh')
-logging.getLogger().setLevel(logging.CRITICAL)
+logging.getLogger('paramiko.transport').setLevel(logging.CRITICAL)
+
+
+class InputException(Exception):
+    pass
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Remote command execution over ssh on legacy Alcatel OmniSwitch.',
                                      epilog='alcatel-ssh %s' % alcatel.__version_string__)
-
-    parser.add_argument('-v', '--verbose',
-                        action='count',
-                        default=0,
-                        help='Print debugging infromation to stderr.')
-
-    parser.add_argument('-d', '--debug',
-                        action='store_true',
-                        help='Raise python exceptions for debugging.')
-
-    parser.add_argument('-j', '--json',
-                        action='store_true',
-                        help='Return json output.')
 
     parser.add_argument('-u', '--username',
                         metavar='username',
@@ -47,10 +39,18 @@ if __name__ == '__main__':
                         type=int,
                         default=22)
 
-    parser.add_argument('-e', '--expect',
-                        metavar='expect',
-                        help='String to expect.',
-                        default=None)
+    parser.add_argument('-j', '--json',
+                        action='store_true',
+                        help='Return json output.')
+
+    parser.add_argument('-v', '--verbose',
+                        action='count',
+                        default=0,
+                        help='Print additional infromation to stderr.')
+
+    parser.add_argument('-t', '--traceback',
+                        action='store_true',
+                        help='Print python traceback for debugging.')
 
     parser.add_argument('host',
                         metavar='host',
@@ -82,68 +82,73 @@ if __name__ == '__main__':
     logger.debug('parsed args: %s' % args)
 
     try:
-        username = args.username
-        if username is None:
-            username = os.environ.get('ALCATEL_USER', None)
-            if username is None or username == '':
-                username = input('Enter username: ')
-                if username == '':
-                    logger.error('Username cannot be empty')
-                    sys.exit(1)
+        try:
+            # nested try for traceback printing
 
-        password = args.password
-        if password is None:
-            password = os.environ.get('ALCATEL_PASS', None)
-            if password is None or password == '':
-                password = getpass.getpass('Enter password: ')
-                if password == '':
-                    logger.error('Password cannot be empty')
-                    sys.exit(1)
+            username = args.username
+            if username is None:
+                username = os.environ.get('ALCATEL_USER', None)
+                if username is None or username == '':
+                    username = input('Enter username: ')
+                    if username == '':
+                        raise InputException('Username cannot be empty.')
 
-        host = socket.gethostbyname(args.host)
+            password = args.password
+            if password is None:
+                password = os.environ.get('ALCATEL_PASS', None)
+                if password is None or password == '':
+                    password = getpass.getpass('Enter password: ')
+                    if password == '':
+                        raise InputException('Password cannot be empty.')
 
-        command = ' '.join(args.command)
+            host = socket.gethostbyname(args.host)
 
-        switch = alcatel.connect(host, username, password)
-        output = switch.send_command(command, expect=args.expect)
+            command = ' '.join(args.command)
 
-        if args.json:
-            json_output = {
-                'command': command,
-                'output': output,
-                'output_lines': output.split('\n'),
-            }
-            print(json.dumps(json_output, sort_keys=True, indent=4))
+            switch = alcatel.connect(host, username, password)
 
-        else:
-            print(output)
+            output = switch.send_command(command)
 
-    except AuthenticationException:
-        logger.error('Authentication failed.')
-        sys.exit(1)
+            if args.json:
+                json_output = {
+                    'command': command,
+                    'output': output,
+                    'output_lines': output.split('\n'),
+                }
+                print(json.dumps(json_output, sort_keys=True, indent=4))
+
+            else:
+                print(output)
+
+        except Exception as e:
+            if args.traceback:
+                traceback.print_exc()
+            raise
 
     except KeyboardInterrupt:
         logger.error('Exiting by keyboard interrupt.')
-        sys.exit(1)
+        sys.exit(0)  # User exit
 
-    except socket.gaierror:
-        logger.error('Name or service not known or incorrect ip address.')
-        sys.exit(2)
+    except InputException as e:
+        logger.error(e.args[0])
+        sys.exit(1)  # User input errors
+
+    except OSError as e:
+        logger.error('OS error: %s.' % e.args[0])
+        sys.exit(2)  # OS errors
+
+    except AuthenticationException:
+        logger.error('Authentication failed.')
+        sys.exit(3)  # Authentication errors
 
     except SSHException as e:
-        if args.debug:
-            raise
+        if e.args[0] == 'Error reading SSH protocol banner':
+            logger.error('SSH legacy OmniSwitch error. Please wait for 2-5 minutes.')
+            sys.exit(5)  # Special case
         else:
-            if e.args[0] == 'Error reading SSH protocol banner':
-                logger.error('SSH legacy OmniSwitch error. Please wait for 2-5 minutes.')
-                sys.exit(5)
-            else:
-                logger.error('SSH error: %s' % e.args[0].lower())
-                sys.exit(4)
+            logger.error('SSH error: %s' % e.args[0])
+            sys.exit(4)  # SSH errors
 
     except Exception as e:
-        if args.debug:
-            raise
-        else:
-            logger.error('Unexpected error: %s.' % e.args[0])
-            sys.exit(9)
+        logger.error('Unexpected error: %s.' % e.args[0])
+        sys.exit(9)
