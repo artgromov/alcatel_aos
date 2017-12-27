@@ -1,0 +1,17 @@
+Value slot (\d+)
+Value port (\d+)
+Value autonegotiation (\S+)
+Value detected_speed_mbps (\S+)
+Value detected_duplex (\S+)
+Value detected_hybrid_mode (\S+)
+Value configured_speed_mbps (\S+)
+Value configured_duplex (\S+)
+Value configured_hybrid_mode (\S+)
+Value trap_linkupdown (\S+)
+
+
+#Start
+#  ^----\+--------\+------\+------\+------\+--------\+------\+------\+------ -> Begin
+
+Start
+  ^\s*${slot}/${port}\s+${autonegotiation}\s+${detected_speed_mbps}\s+${detected_duplex}\s+${detected_hybrid_mode}\s+${configured_speed_mbps}\s+${configured_duplex}\s+${configured_hybrid_mode}\s+${trap_linkupdown} -> Record
