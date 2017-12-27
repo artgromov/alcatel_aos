@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 import traceback
+import textfsm
 import socket
 import json
 import getpass
@@ -20,10 +21,10 @@ class InputException(Exception):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Remote command execution over ssh on legacy Alcatel OmniSwitch.',
+    parser = argparse.ArgumentParser(description='Remote parser_key execution over ssh on legacy Alcatel OmniSwitch.',
                                      epilog='alcatel-ssh %s' % alcatel.__version_string__)
-    # TODO: add -f option to read command lines from file
-    # TODO: add -i option to read from stdin (may require to make <command> arg optional?)
+    # TODO: add -f option to read parser_key lines from file
+    # TODO: add -i option to read from stdin (may require to make <parser_key> arg optional?)
     parser.add_argument('-u', '--username',
                         metavar='username',
                         help='Specify username. Could be set in USER env var.',
@@ -80,6 +81,7 @@ if __name__ == '__main__':
 
     logger.debug('parsed args: %s' % args)
     logger.debug('alcatel project directory: %s' % alcatel.PROJECTDIR)
+    logger.debug('alcatel parsing tools directory: %s' % alcatel.PARSINGDIR)
 
     try:
         try:
@@ -110,9 +112,10 @@ if __name__ == '__main__':
             result = switch.send_command(command)
 
             if args.json:
+                result.pop('output')
                 print(json.dumps(result, sort_keys=True, indent=4))
             else:
-                print('\n'.join(result['output']))
+                print(result['output'])
 
         except Exception as e:
             if args.traceback:
@@ -127,8 +130,8 @@ if __name__ == '__main__':
         logger.error(e.args[0])
         sys.exit(1)  # User input errors
 
-    except socket.error as e:
-        logger.error('Socket error: %s.' % e.args[1])
+    except OSError as e:
+        logger.error('OS error: %s.' % e.args[1])
         sys.exit(2)
 
     except AuthenticationException as e:
@@ -142,6 +145,10 @@ if __name__ == '__main__':
 
         logger.error('SSH error: %s.' % e.args[0])
         sys.exit(4)
+
+    except textfsm.TextFSMTemplateError as e:
+        logger.error('TextFSM error: %s' % e.args[0])
+        sys.exit(6)
 
     except Exception as e:
         logger.error('Unexpected error: %s.' % e.args[0])

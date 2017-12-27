@@ -1,6 +1,4 @@
 import os
-
-
 __version__ = (0, 1)
 __version_string__ = 'v' + '.'.join(str(i) for i in __version__)
 
@@ -11,9 +9,10 @@ BINDIR = os.path.join(PROJECTDIR, 'bin')
 ETCDIR = os.path.join(PROJECTDIR, 'etc')
 
 
-from alcatel.legacy_ssh import AlcatelLegacySSH
+from alcatel.ssh import AlcatelSSH
+from alcatel.parsing import PARSINGDIR
 
 
 def connect(host, username, password, port):
-    switch = AlcatelLegacySSH(host, username, password, port)
+    switch = AlcatelSSH(host, username, password, port)
     return switch

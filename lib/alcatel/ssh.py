@@ -2,9 +2,11 @@ import paramiko
 from datetime import datetime, timedelta
 import socket
 import logging
+import textfsm
 from threading import RLock
 import os
 
+from alcatel.parsing import parse
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +34,7 @@ def patch_dsa():
         DSA_PATCHED = True
 
 
-class AlcatelLegacySSH:
+class AlcatelSSH:
     def __init__(self, ip, username, password, port=22, *, connection_timeout=5, keepalive=5,
                  missing_host_key_policy=paramiko.client.AutoAddPolicy()):
         patch_dsa()
@@ -129,25 +131,30 @@ class AlcatelLegacySSH:
         return recv_string
 
     def _recv_parse(self, output, command):
-        output = output.replace('\r\n', '\n')  # TODO: test line endings processing on multiple platforms
-        output = output.lstrip(command)
-        output = output.rstrip(self.prompt)
-        output = output.strip().split('\n')
+        # TODO: test line endings processing on multiple platforms
+        output = output.lstrip(command)\
+                       .lstrip('\r\n')\
+                       .rstrip(self.prompt)\
+                       .rstrip('\r\n')
 
-        failed = False
-        failed_cause = None
-        for line in output:
+        output_lines = output.split('\r\n')
+
+        status = 'ok'
+        for line in output_lines:
             if line.startswith('ERROR: '):
-                failed = True
-                failed_cause = line.lstrip('ERROR: ')
+                status = 'error'
                 break
 
+        output_data = None
+        if status == 'ok':
+            output_data = parse(command, output)
+
         result = {
-            'command': command,
+            'parser_key': command,
+            'status': status,
             'output': output,
-            'failed': failed,
-            'failed_cause': failed_cause,
-            'data': None,
+            'output_lines': output_lines,
+            'output_data': output_data,
         }
 
         return result
