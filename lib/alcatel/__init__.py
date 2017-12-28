@@ -10,7 +10,7 @@ ETCDIR = os.path.join(PROJECTDIR, 'etc')
 
 
 from alcatel.ssh import AlcatelSSH
-from alcatel.parsing import PARSINGDIR
+from alcatel.parsing import PARSINGDIR, parse
 
 
 def connect(host, username, password, port):

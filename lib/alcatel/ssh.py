@@ -130,49 +130,31 @@ class AlcatelSSH:
         recv_string = recv_buffer.decode(self.encoding)
         return recv_string
 
-    def _recv_parse(self, output, command):
+    def _recv_clean(self, recv_string, command):
         # TODO: test line endings processing on multiple platforms
-        output = output.lstrip(command)\
-                       .lstrip('\r\n')\
-                       .rstrip(self.prompt)\
-                       .rstrip('\r\n')
-
-        output_lines = output.split('\r\n')
-
-        status = 'ok'
-        for line in output_lines:
-            if line.startswith('ERROR: '):
-                status = 'error'
-                break
-
-        output_data = None
-        if status == 'ok':
-            output_data = parse(command, output)
-
-        result = {
-            'parser_key': command,
-            'status': status,
-            'output': output,
-            'output_lines': output_lines,
-            'output_data': output_data,
-        }
-
-        return result
+        output = recv_string.lstrip(command)\
+                            .lstrip('\r\n')\
+                            .rstrip(self.prompt)\
+                            .rstrip('\r\n')
+        return output
 
     def send_command(self, command, *, expect=None, timeout=10):
+        # expect != None is experimental
+        # TODO: add code to handle locked condition
         with self.thread_lock:
             self._send(command)
             recv_string = self._recv(expect, timeout)
-            result = self._recv_parse(recv_string, command)
-            return result
+            output = self._recv_clean(recv_string, command)
+            return output
 
     def send_command_set(self, command_list):
+        # TODO: add code to handle locked condition
         with self.thread_lock:
-            result_list = []
+            output_list = []
             for command in command_list:
-                result = self.send_command(command)
-                result_list.append(result)
-            return result_list
+                output = self.send_command(command)
+                output_list.append(output)
+            return output_list
 
     def close(self):
         self.transport.close()

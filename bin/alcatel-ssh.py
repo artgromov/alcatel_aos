@@ -84,9 +84,8 @@ if __name__ == '__main__':
     logger.debug('alcatel parsing tools directory: %s' % alcatel.PARSINGDIR)
 
     try:
+        # nested try for traceback printing
         try:
-            # nested try for traceback printing
-
             username = args.username
             if username is None:
                 username = os.environ.get('ALCATEL_USER', None)
@@ -108,14 +107,33 @@ if __name__ == '__main__':
             command = ' '.join(args.command)
 
             switch = alcatel.connect(host, username, password, port=args.port)
-
-            result = switch.send_command(command)
+            output = switch.send_command(command)
 
             if args.json:
-                result.pop('output')
+                logging.debug('returning json')
+                output_lines = output.split('\r\n')
+
+                status = 'ok'
+                for line in output_lines:
+                    if line.startswith('ERROR: '):
+                        status = 'error'
+                        break
+
+                output_data = None
+                if status == 'ok':
+                    output_data = alcatel.parse(command, output)
+
+                result = {
+                    'command': command,
+                    'status': status,
+                    'output_lines': output_lines,
+                    'output_data': output_data,
+                }
+
                 print(json.dumps(result, sort_keys=True, indent=4))
             else:
-                print(result['output'])
+                logging.debug('returning plain output')
+                print(output)
 
         except Exception as e:
             if args.traceback:
@@ -140,7 +158,7 @@ if __name__ == '__main__':
 
     except SSHException as e:
         if e.args[0] == 'Error reading SSH protocol banner':
-            logger.error('SSH legacy OmniSwitch error. Please wait for 2-5 minutes.')
+            logger.error('SSH legacy OmniSwitch error. Please wait for 1-3 minutes.')
             sys.exit(5)  # Special case
 
         logger.error('SSH error: %s.' % e.args[0])

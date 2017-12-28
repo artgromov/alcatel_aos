@@ -63,6 +63,7 @@ def parse(output):
 
         with_types.append(new_entry)
 
+    # TODO: remote duplicate interfaces (pick preferred or active one from hybrid interface pair)
     # duplicate_pairs = set()
     # duplicate_indices = set()
     # indices = list(range(len(with_types)))
