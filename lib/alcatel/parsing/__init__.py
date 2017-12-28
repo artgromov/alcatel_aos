@@ -28,38 +28,37 @@ def template_parse(template_name, output):
 
 
 def parse(command, input_data):
-    default_parse_stack = {
-        'pre_parse': lambda data: data,
-        'parse': lambda data: data,
-        'post_parse': lambda data: data,
-    }
-
-    parse_stack = {}
-
     parser_key = command.replace(' ', '_').replace('-', '_')
     logger.debug('lookup parser functions with parser_key: %s' % parser_key)
 
     modules = [i.rstrip('.py') for i in os.listdir(PARSINGDIR) if i.endswith('.py') and i != os.path.basename(__file__)]
-    templates = [i.rstrip('.template') for i in os.listdir(PARSINGDIR) if i.endswith('.template')]
-
+    module = None
     if parser_key in modules:
-        module_name = 'alcatel.parsing.%s' % parser_key
-        module_obj = import_module(module_name)
+        module = 'alcatel.parsing.%s' % parser_key
+        module_obj = import_module(module)
 
-        for stage in ['pre_parse', 'parse', 'post_parse']:
+    templates = [i.rstrip('.template') for i in os.listdir(PARSINGDIR) if i.endswith('.template')]
+    template = None
+    if parser_key in templates:
+        template = parser_key + '.template'
+
+    parse_stack = {}
+    for stage in ['pre_parse', 'parse', 'post_parse']:
+        if module:
             try:
-                stage_func = getattr(module_obj, stage)
-                logger.info('using %s function from module: %s' % (stage, module_name))
+                parse_stack[stage] = getattr(module_obj, stage)
+                logger.info('using %s function from module: %s' % (stage, module))
+                continue
             except AttributeError:
-                if stage == 'parse' and parser_key in templates:
-                    template_name = parser_key + '.template'
-                    logger.info('using template_parse function')
-                    parse_stack['parse'] = partial(template_parse, template_name)
-                    continue
-                stage_func = default_parse_stack[stage]
-                logger.info('using default_%s function' % stage)
+                pass
 
-            parse_stack[stage] = stage_func
+        if stage == 'parse' and template:
+            parse_stack[stage] = partial(template_parse, template)
+            logger.info('using template_parse function')
+            continue
+
+        parse_stack[stage] = lambda data: data
+        logger.info('using default_%s function' % stage)
 
     output_data = input_data
     for stage in ['pre_parse', 'parse', 'post_parse']:
