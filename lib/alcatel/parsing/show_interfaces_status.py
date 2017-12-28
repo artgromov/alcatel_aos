@@ -1,15 +1,4 @@
-import os
-import logging
-from alcatel.parsing import parse_textfsm
-
-
-logger = logging.getLogger(__name__)
-
-
-def parse(output):
-    template_name = os.path.basename(__file__).rstrip('.py') + '.template'
-    data = parse_textfsm(template_name, output)
-
+def post_parse(data):
     hybrid_modes = {
         'FF': 'ForcedFiber',
         'FC': 'ForcedCopper',
@@ -21,7 +10,7 @@ def parse(output):
         '-': None,
     }
 
-    with_types = []
+    new_data = []
 
     for entry in data:
         new_entry = dict()
@@ -61,36 +50,6 @@ def parse(output):
                 except KeyError:
                     new_entry[key] = value
 
-        with_types.append(new_entry)
+        new_data.append(new_entry)
 
-    # TODO: remote duplicate interfaces (pick preferred or active one from hybrid interface pair)
-    # duplicate_pairs = set()
-    # duplicate_indices = set()
-    # indices = list(range(len(with_types)))
-    # for i in indices:
-    #     for j in indices[i+1:]:
-    #         a = with_types[i]
-    #         b = with_types[j]
-    #         if a['slot'] == b['slot'] and a['port'] == b['port']:
-    #             duplicate_pairs.add(tuple(sorted([i, j])))
-    #             duplicate_indices.add(i)
-    #             duplicate_indices.add(j)
-    #
-    # logger.debug('duplicate pairs found: %s' % duplicate_pairs)
-    #
-    # without_duplicates = []
-    # for i, entry in enumerate(with_types):
-    #     if i not in duplicate_indices:
-    #         without_duplicates.append(entry)
-    #     else:
-    #         if entry['connected']:
-    #             without_duplicates.append(entry)
-    #         else:
-    #             for pair in duplicate_pairs:
-    #                 if i in pair:
-    #                     pair_list = list(pair)
-    #                     pair_list.remove(i)
-    #                     j = pair_list[0]
-    #                     without_duplicates.append(with_types[j])
-
-    return with_types
+    return new_data

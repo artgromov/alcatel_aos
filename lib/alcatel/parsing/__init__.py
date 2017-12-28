@@ -11,8 +11,7 @@ logger = logging.getLogger(__name__)
 PARSINGDIR = os.path.dirname(os.path.realpath(__file__))
 
 
-def parse_textfsm(template_name, output):
-    logger.debug('parsing using template file: %s' % template_name)
+def template_parse(template_name, output):
     filename = os.path.join(PARSINGDIR, template_name)
     with open(filename) as file:
         template = textfsm.TextFSM(file)
@@ -28,27 +27,47 @@ def parse_textfsm(template_name, output):
     return data
 
 
-def parse(command, output):
-    func = None
+def parse(command, input_data):
+    default_parse_stack = {
+        'pre_parse': lambda data: data,
+        'parse': lambda data: data,
+        'post_parse': lambda data: data,
+    }
+
+    parse_stack = {}
+
     parser_key = command.replace(' ', '_').replace('-', '_')
-    logger.debug('lookup with parser_key: %s' % parser_key)
-    for filename in sorted(os.listdir(PARSINGDIR)):
-        name, ext = os.path.splitext(filename)
+    logger.debug('lookup parser functions with parser_key: %s' % parser_key)
 
-        if parser_key == name:
-            if ext == '.py':
-                module_name = 'alcatel.parsing.%s' % name
-                logger.debug('found module: %s' % module_name)
-                func = import_module(module_name).parse
+    modules = [i.rstrip('.py') for i in os.listdir(PARSINGDIR) if i.endswith('.py') and i != os.path.basename(__file__)]
+    templates = [i.rstrip('.template') for i in os.listdir(PARSINGDIR) if i.endswith('.template')]
 
-            elif ext == '.template' and func is None:
-                template_name = filename
-                logger.debug('found template: %s' % template_name)
-                func = partial(parse_textfsm, template_name)
+    if parser_key in modules:
+        module_name = 'alcatel.parsing.%s' % parser_key
+        module_obj = import_module(module_name)
 
-    if func is None:
-        logger.debug('nothing found, returning None')
+        for stage in ['pre_parse', 'parse', 'post_parse']:
+            try:
+                stage_func = getattr(module_obj, stage)
+                logger.debug('using %s function from module: %s' % (stage, module_name))
+            except AttributeError:
+                if stage == 'parse' and parser_key in templates:
+                    template_name = parser_key + '.template'
+                    logger.debug('using template_parse function')
+                    parse_stack['parse'] = partial(template_parse, template_name)
+                    continue
+                stage_func = default_parse_stack[stage]
+                logger.debug('using default_%s function' % stage)
+
+            parse_stack[stage] = stage_func
+
+    output_data = input_data
+    for stage in ['pre_parse', 'parse', 'post_parse']:
+        logger.debug('running stage: %s' % stage)
+        func = parse_stack[stage]
+        output_data = func(output_data)
+
+    if output_data == input_data:
         return None
     else:
-        return func(output)
-
+        return output_data
