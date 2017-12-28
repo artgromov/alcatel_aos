@@ -31,16 +31,22 @@ def parse(command, input_data):
     parser_key = command.replace(' ', '_').replace('-', '_')
     logger.debug('lookup parser functions with parser_key: %s' % parser_key)
 
-    modules = [i.rstrip('.py') for i in os.listdir(PARSINGDIR) if i.endswith('.py') and i != os.path.basename(__file__)]
+    files = os.listdir(PARSINGDIR)
+
+    modules = [i[:-3] for i in files if i.endswith('.py') and i != os.path.basename(__file__)]
+    logger.debug('available modules: %s' % modules)
     module = None
     if parser_key in modules:
         module = 'alcatel.parsing.%s' % parser_key
         module_obj = import_module(module)
+        logger.debug('found module: %s' % module)
 
-    templates = [i.rstrip('.template') for i in os.listdir(PARSINGDIR) if i.endswith('.template')]
+    templates = [i[:-9] for i in files if i.endswith('.template')]
+    logger.debug('available templates: %s' % templates)
     template = None
     if parser_key in templates:
         template = parser_key + '.template'
+        logger.debug('found template: %s' % template)
 
     parse_stack = {}
     for stage in ['pre_parse', 'parse', 'post_parse']:
@@ -54,7 +60,7 @@ def parse(command, input_data):
 
         if stage == 'parse' and template:
             parse_stack[stage] = partial(template_parse, template)
-            logger.info('using template_parse function')
+            logger.info('using template_parse function with template: %s' % template)
             continue
 
         parse_stack[stage] = lambda data: data
