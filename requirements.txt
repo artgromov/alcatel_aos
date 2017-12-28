@@ -1,0 +1,2 @@
+textfsm>=0.3.2
+paramiko>=2.1.1
