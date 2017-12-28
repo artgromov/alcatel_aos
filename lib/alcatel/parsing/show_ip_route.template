@@ -1,0 +1,8 @@
+Value ip_address ([\d\.]+)
+Value mask ([\d\.]+)
+Value gateway ([\d\.]+)
+Value age ([\ddhm]+)
+Value protocol (\w+)
+
+Start
+  ^\s+${ip_address}\s+${mask}\s+${gateway}\s+${age}\s+${protocol} -> Record

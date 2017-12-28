@@ -1,0 +1,9 @@
+Value name (\S+)
+Value ip_address ([\d\.]+)
+Value mask ([\d\.]+)
+Value status (\w+)
+Value forward (\w+)
+Value device (vlan \d+|\S+)
+
+Start
+  ^${name}\s+${ip_address}\s+${mask}\s+${status}\s+${forward}\s+${device} -> Record

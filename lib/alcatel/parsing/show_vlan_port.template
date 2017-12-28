@@ -1,0 +1,8 @@
+Value vlan (\d+)
+Value slot (\d+)
+Value port (\d+)
+Value type (\S+)
+Value status (\S+)
+
+Start
+  ^\s+${vlan}\s+${slot}/${port}\s+${type}\s+${status} -> Record

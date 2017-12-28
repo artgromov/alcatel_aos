@@ -1,0 +1,15 @@
+Value vlan (\d+)
+Value type (\S+)
+Value admin (on|off|NA)
+Value oper (on|off|NA)
+Value stp_1x1 (on|off|NA)
+Value stp_flat (on|off|NA)
+Value auth (on|off|NA)
+Value ip (on|off|NA)
+Value ipx (on|off|NA)
+Value mble_tag (on|off|NA)
+Value src_learning (on|off|NA)
+Value name (\S+)
+
+Start
+  ^\s+${vlan}\s+${type}\s+${admin}\s+${oper}\s+${stp_1x1}\s+${stp_flat}\s+${auth}\s+${ip}\s+${ipx}\s+${mble_tag}\s+${src_learning}\s+${name} -> Record
