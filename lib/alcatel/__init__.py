@@ -13,6 +13,15 @@ from alcatel.ssh import AlcatelSSH
 from alcatel.parsing import PARSINGDIR, parse
 
 
-def connect(host, username, password, port):
-    switch = AlcatelSSH(host, username, password, port)
+session_cache = dict()
+
+
+def connect(ip, username, password, port):
+    key = '{}_{}_{}'.format(ip, port, username)
+    try:
+        switch = session_cache[key]
+    except KeyError:
+        switch = AlcatelSSH(ip, username, password, port)
+        session_cache[key] = switch
+
     return switch
