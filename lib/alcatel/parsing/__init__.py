@@ -49,15 +49,15 @@ def parse(command, input_data):
         for stage in ['pre_parse', 'parse', 'post_parse']:
             try:
                 stage_func = getattr(module_obj, stage)
-                logger.debug('using %s function from module: %s' % (stage, module_name))
+                logger.info('using %s function from module: %s' % (stage, module_name))
             except AttributeError:
                 if stage == 'parse' and parser_key in templates:
                     template_name = parser_key + '.template'
-                    logger.debug('using template_parse function')
+                    logger.info('using template_parse function')
                     parse_stack['parse'] = partial(template_parse, template_name)
                     continue
                 stage_func = default_parse_stack[stage]
-                logger.debug('using default_%s function' % stage)
+                logger.info('using default_%s function' % stage)
 
             parse_stack[stage] = stage_func
 

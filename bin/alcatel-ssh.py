@@ -69,19 +69,19 @@ if __name__ == '__main__':
     logging_format = '%(message)s'
     if args.verbose >= 1:
         logging_level = logging.INFO
-        logging_format = '%(levelname)s - %(message)s'
+        logging_format = '%(levelname)-8s %(message)s'
     if args.verbose >= 2:
         logging_level = logging.DEBUG
-        logging_format = '%(name)s - %(levelname)s - %(message)s'
-    if args.verbose >= 5:
+        logging_format = '%(levelname)-8s %(name)s - %(message)s'
+    if args.verbose >= 3:
         logging_level = 5
-        logging_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        logging_format = '%(asctime)s %(levelname)-8s %(name)s - %(message)s'
 
     logging.basicConfig(format=logging_format, level=logging_level)
 
     logger.debug('parsed args: %s' % args)
-    logger.debug('alcatel project directory: %s' % alcatel.PROJECTDIR)
-    logger.debug('alcatel parsing tools directory: %s' % alcatel.PARSINGDIR)
+    logger.info('alcatel project directory: %s' % alcatel.PROJECTDIR)
+    logger.info('alcatel parsing tools directory: %s' % alcatel.PARSINGDIR)
 
     try:
         # nested try for traceback printing
@@ -110,7 +110,7 @@ if __name__ == '__main__':
             output = switch.send_command(command)
 
             if args.json:
-                logging.debug('returning json')
+                logger.info('returning json')
                 output_lines = output.split('\r\n')
 
                 status = 'ok'
@@ -132,7 +132,7 @@ if __name__ == '__main__':
 
                 print(json.dumps(result, sort_keys=True, indent=4))
             else:
-                logging.debug('returning plain output')
+                logging.info('returning plain output')
                 print(output)
 
         except Exception as e:
@@ -141,7 +141,7 @@ if __name__ == '__main__':
             raise
 
     except KeyboardInterrupt:
-        logger.error('Exiting by keyboard interrupt.')
+        logger.warning('Exiting by keyboard interrupt.')
         sys.exit(0)
 
     except InputException as e:
@@ -169,5 +169,5 @@ if __name__ == '__main__':
         sys.exit(6)
 
     except Exception as e:
-        logger.error('Unexpected error: %s.' % e.args[0])
+        logger.critical('Unexpected error: %s.' % e.args[0])
         sys.exit(9)

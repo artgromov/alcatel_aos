@@ -80,7 +80,7 @@ class AlcatelSSH:
         recv_end = None
         while True:
             if self.channel.recv_ready():
-                logger.log(5, '_connect recv_buffer: {}'.format(recv_buffer))
+                logger.log(5, '_connect recv_buffer len: %s' % len(recv_buffer))
                 recv_end = datetime.now() + timedelta(seconds=1)
                 data = self.channel.recv(1024)
                 recv_buffer += data
@@ -88,14 +88,14 @@ class AlcatelSSH:
                 break
 
         self.prompt = recv_buffer.decode(self.encoding).replace('\r\n', '\n').split('\n')[-1]
-        logger.debug('prompt: %s' % self.prompt)
+        logger.debug('ssh terminal prompt: "%s"' % self.prompt)
 
     def _ensure_connected(self):
         if self.ssh is None:
             self._connect()
 
         if self.channel.closed:
-            logger.debug('reconnecting, channel closed')
+            logger.info('channel was closed, reconnecting')
             self._connect()
 
     def _send(self, command):  # TODO: test with big send_buffer
@@ -123,7 +123,7 @@ class AlcatelSSH:
         while True:
             data = self.channel.recv(1024)
             recv_buffer += data
-            logger.log(5, 'recv_buffer: %s' % recv_buffer)
+            logger.log(5, 'recv_buffer len: %s' % len(recv_buffer))
             if recv_buffer.endswith(expect) or datetime.now() > recv_timeout:
                 break
 
