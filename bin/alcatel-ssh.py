@@ -27,41 +27,41 @@ if __name__ == '__main__':
     # TODO: add -i option to read from stdin (may require to make <command> arg optional?)
     parser.add_argument('-u', '--username',
                         metavar='username',
-                        help='Specify username. Could be set in ALCATEL_USER env var.',
+                        help='use username (could be taken from ALCATEL_USER env var)',
                         default=None)
 
     parser.add_argument('-p', '--password',
                         metavar='password',
-                        help='Specify password. Could be set in ALCATEL_PASS env var.',
+                        help='use password (could be taken from ALCATEL_PASS env var)',
                         default=None)
 
     parser.add_argument('-P', '--port',
                         metavar='port',
-                        help='Specify ssh port.',
+                        help='connect to non-default port',
                         type=int,
                         default=22)
 
     parser.add_argument('-j', '--json',
                         action='store_true',
-                        help='Return json output.')
+                        help='return json output')
 
     parser.add_argument('-v', '--verbose',
                         action='count',
                         default=0,
-                        help='Print additional infromation to stderr.')
+                        help='print additional information to stderr')
 
     parser.add_argument('-t', '--traceback',
                         action='store_true',
-                        help='Print python traceback for debugging.')
+                        help='print python traceback for error debugging')
 
     parser.add_argument('host',
                         metavar='host',
-                        help='Host name or ip address to connect to.')
+                        help='host name or ip address to connect')
 
     parser.add_argument('command',
                         metavar='command',
                         nargs='+',
-                        help='Command to execute.')
+                        help='command to execute')
 
     args = parser.parse_args()
 
