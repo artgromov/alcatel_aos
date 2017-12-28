@@ -21,18 +21,18 @@ class InputException(Exception):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Remote parser_key execution over ssh on legacy Alcatel OmniSwitch.',
+    parser = argparse.ArgumentParser(description='Remote command execution over ssh on Alcatel AOS devices (v6.4.4 and earlier).',
                                      epilog='alcatel-ssh %s' % alcatel.__version_string__)
-    # TODO: add -f option to read parser_key lines from file
-    # TODO: add -i option to read from stdin (may require to make <parser_key> arg optional?)
+    # TODO: add -f option to read command lines from file
+    # TODO: add -i option to read from stdin (may require to make <command> arg optional?)
     parser.add_argument('-u', '--username',
                         metavar='username',
-                        help='Specify username. Could be set in USER env var.',
+                        help='Specify username. Could be set in ALCATEL_USER env var.',
                         default=None)
 
     parser.add_argument('-p', '--password',
                         metavar='password',
-                        help='Specify password. Could be set in PASS env var.',
+                        help='Specify password. Could be set in ALCATEL_PASS env var.',
                         default=None)
 
     parser.add_argument('-P', '--port',
