@@ -1,0 +1,34 @@
+Value local_id_subtype (\d+)
+Value local_id_subtype_name (.*)
+Value local_id (\S+)
+Value local_system_name (\S+)
+Value local_system_description (.*)
+Value local_caps_supported (\w+( \w+)*)
+Value local_caps_enabled (\w+( \w+)*)
+Value lldp_mode (.*)
+Value lldp_pdu_transmit_interval (\d+( \w+)?)
+Value lldp_ttl_hold_multiplier (\d+)
+Value lldp_pdu_transmit_delay (\d+( \w+)?)
+Value lldp_reinit_delay (\d+( \w+)?)
+Value lldp_mib_notify_interval (\d+( \w+)?)
+Value lldp_fast_start_count (\d+)
+Value mgmt_address_type (\d+)
+Value mgmt_address_type_name (.*)
+Value mgmt_address ([\d\.]+)
+
+Start
+  ^\s+Chassis ID Subtype\s+=\s+${local_id_subtype}\s+\(${local_id_subtype_name}\),
+  ^\s+Chassis ID\s+=\s+${local_id},
+  ^\s+System Name\s+=\s+${local_system_name},
+  ^\s+System Description\s+=\s+${local_system_description},
+  ^\s+Capabilities Supported\s+=\s+${local_caps_supported},
+  ^\s+Capabilities Enabled\s+=\s+${local_caps_enabled},
+  ^\s+LLDP Mode\s+=\s+${lldp_mode},
+  ^\s+LLDPDU Transmit Interval\s+=\s+${lldp_pdu_transmit_interval},
+  ^\s+TTL Hold Multiplier\s+=\s+${lldp_ttl_hold_multiplier},
+  ^\s+LLDPDU Transmit Delay\s+=\s+${lldp_pdu_transmit_delay},
+  ^\s+Reintialization Delay\s+=\s+${lldp_reinit_delay},
+  ^\s+MIB Notification Interval\s+=\s+${lldp_mib_notify_interval},
+  ^\s+Fast Start Count\s+=\s+${lldp_fast_start_count},
+  ^\s+Management Address Type\s+=\s+${mgmt_address_type}\s+\(${mgmt_address_type_name}\),
+  ^\s+Management IP Address\s+=\s+${mgmt_address},

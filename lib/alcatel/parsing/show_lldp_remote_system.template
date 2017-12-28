@@ -1,0 +1,34 @@
+Value Required local_port (\S+)
+Value remote_id (\S+)
+Value remote_id_subtype (\d+)
+Value remote_id_subtype_name (.*)
+Value remote_system_name ([^,]*)
+Value remote_system_description (.*)
+Value remote_caps_supported (\w+( \w+)*)
+Value remote_caps_enabled (\w+( \w+)*)
+Value remote_mgmt_address ([\d\.]+)
+Value remote_port (\S+)
+Value remote_port_description ([^,]*)
+Value remote_port_subtype (\d+)
+Value remote_port_subtype_name (.*)
+Value remote_port_default_vlan (\d+)
+Value remote_port_autoneg ([^,]*)
+Value remote_port_mau_type (\S+)
+Value remote_port_mau_type_description ([^,]*)
+
+
+Start
+  ^Remote LLDP Agents on Local Slot/Port.* -> Continue.Record
+  ^Remote LLDP Agents on Local Slot/Port\s+${local_port}:
+  ^\s+Chassis ${remote_id}, Port ${remote_port}:
+  ^\s+Chassis Subtype\s+=\s+${remote_id_subtype}\s+\(${remote_id_subtype_name}\),?
+  ^\s+Port Subtype\s+=\s+${remote_port_subtype}\s+\(${remote_port_subtype_name}\),?
+  ^\s+Port Description\s+=\s+${remote_port_description},?
+  ^\s+System Name\s+=\s+${remote_system_name},?
+  ^\s+System Description\s+=\s+${remote_system_description},?
+  ^\s+Capabilities Supported\s+=\s+${remote_caps_supported},?
+  ^\s+Capabilities Enabled\s+=\s+${remote_caps_enabled},?
+  ^\s+Management IP Address\s+=\s+${remote_mgmt_address},?
+  ^\s+Remote port default vlan\s+=\s+${remote_port_default_vlan},?
+  ^\s+Remote port MAC/PHY AutoNeg\s+=\s+${remote_port_autoneg},?
+  ^\s+Mau Type\s+=\s+${remote_port_mau_type} - ${remote_port_mau_type_description},?
